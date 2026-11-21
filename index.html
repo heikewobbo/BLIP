@@ -255,6 +255,8 @@ const BLIP = {
 };
 const CLASS2BLIP = {fuel:'fuel',hospital:'hospital',police:'police',fast_food:'food',restaurant:'food',cafe:'cafe',bar:'cafe',beer:'cafe',
   bank:'bank',parking:'parking',pharmacy:'pharmacy',grocery:'shop',shop:'shop',car:'car',lodging:'hotel'};
+const CATNAME = {fuel:'Distributore',hospital:'Ospedale',police:'Polizia',fast_food:'Fast food',restaurant:'Ristorante',cafe:'Bar',bar:'Bar',beer:'Birreria',
+  bank:'Banca',parking:'Parcheggio',pharmacy:'Farmacia',grocery:'Supermercato',shop:'Negozio',car:'Auto',lodging:'Hotel'};
 const BLIPCOL = {fuel:'#f2a83b',hospital:'#4aa3ff',police:'#4f7fe0',food:'#f5d05a',cafe:'#d69a66',bank:'#6fd36f',parking:'#9ad0ff',
   pharmacy:'#3fcf6a',shop:'#9be36a',car:'#e6e6e6',hotel:'#b48cff'};
 function blipSVG(inner,col){return `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 32 32"><g fill="#111" stroke="#111" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round">${inner}</g><g fill="${col}" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">${inner}</g></svg>`;}
@@ -284,6 +286,19 @@ map.on('load', async ()=>{
       filter:['in',['get','class'],['literal',Object.keys(CLASS2BLIP)]],
       layout:{'icon-image':['concat','blip-',['get','class']],'icon-size':0.9,'icon-allow-overlap':false,
         'icon-pitch-alignment':'viewport','icon-rotation-alignment':'viewport','symbol-sort-key':['coalesce',['get','rank'],99]}});
+  }
+  if(vsrc){
+    // tocca un blip sulla mappa → diventa la destinazione
+    map.on('click','blips',e=>{
+      if(S.mode!=='menu'||!e.features||!e.features.length)return;
+      const f=e.features[0],p=f.properties||{};
+      const nome=p['name:it']||p.name||p.name_int||'';
+      const cat=CATNAME[p.class]||'Luogo';
+      helpBlip();
+      setDest(f.geometry.coordinates.slice(0,2),nome?(nome.toLowerCase().includes(cat.toLowerCase())?nome:`${nome} · ${cat}`):cat);
+    });
+    map.on('mouseenter','blips',()=>{map.getCanvas().style.cursor='pointer';});
+    map.on('mouseleave','blips',()=>{map.getCanvas().style.cursor='';});
   }
   S.ready=true;
   renderPlaces();
